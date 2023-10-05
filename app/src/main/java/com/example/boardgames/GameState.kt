@@ -3,22 +3,24 @@ package com.example.boardgames
 class GameState(
     var gameName: String = "Noughts and Crosses",
     var numPlayers: Int = 2,
-    var playerNames: Array<String> = arrayOf("Player 1", "Player 2"),
-    var scores: Array<Int> = arrayOf(0, 0),
     var currentPlayer: Int = 0,
     var ownership: Array<Int> = arrayOf(-1, -1, -1, -1, -1, -1, -1, -1, -1),
-    var victoriousPlayer: Int = -1
+    var victoriousPlayer: Int = -1,
+    var stalemate: Boolean = false,
+    var turn: Int = 1
     ) {
 
     fun nextPlayer() {
-        currentPlayer = if (currentPlayer == 0) {
-            1
-        } else {
-            0
+        currentPlayer = (currentPlayer + 1) % numPlayers
+    }
+
+    fun determineStalemate() {
+        if (victoriousPlayer == -1 && -1 !in ownership) {
+            stalemate = true
         }
     }
 
-    fun determineVictory(latest: Int) {
+    fun determineVictory() {
         var count = 0
 
         for (arr in arrayOf(
@@ -38,6 +40,7 @@ class GameState(
             }
             if (count == 3) {
                 victoriousPlayer = currentPlayer
+                break
             } else {
                 count = 0
             }
