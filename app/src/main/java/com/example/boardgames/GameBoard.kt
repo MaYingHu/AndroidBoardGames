@@ -20,11 +20,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun BoardSquare(modifier: Modifier, squareId: Int, gameState: GameState, boardSquareToBoardSquares: (gameState: GameState) -> Unit) {
+fun BoardSquare(modifier: Modifier, squareId: Int, sessionState: SessionState, gameState: GameState, boardSquareToBoardSquares: (gameState: GameState) -> Unit) {
 
+    val currentSessionState = remember { sessionState }
     val currentGameState = remember { gameState }
-    val theSymbol = remember { mutableStateOf<Int?>(null) }
+    val theSymbol = remember { mutableStateOf<Int?>(R.drawable.ablanksquare) }
     val interactionSource = remember { MutableInteractionSource() }
+
+    if (currentGameState.ownership[squareId] == -1) {
+        theSymbol.value = R.drawable.ablanksquare
+    }
 
     Box(
         modifier = modifier
@@ -32,27 +37,28 @@ fun BoardSquare(modifier: Modifier, squareId: Int, gameState: GameState, boardSq
                 interactionSource = interactionSource,
                 indication = null
             ) {
-                if (theSymbol.value == null) {
+                if (currentGameState.ownership[squareId] == -1) {
                     if (currentGameState.currentPlayer == 0) {
                         theSymbol.value = R.drawable.x
                     } else {
                         theSymbol.value = R.drawable.o
                     }
                     currentGameState.ownership[squareId] = currentGameState.currentPlayer
-                    currentGameState.determineVictory(squareId)
+                    currentGameState.determineVictory()
+                    currentGameState.determineStalemate()
                     if (currentGameState.victoriousPlayer < 0) {
                         currentGameState.nextPlayer()
                     } else {
-                        currentGameState.scores[currentGameState.currentPlayer] += 1
+                        currentSessionState.scores[currentGameState.currentPlayer] += 1
                     }
                     val newGameState = GameState(
                         gameName = currentGameState.gameName,
                         numPlayers = currentGameState.numPlayers,
-                        playerNames = currentGameState.playerNames,
-                        scores = currentGameState.scores,
                         currentPlayer = currentGameState.currentPlayer,
                         ownership = currentGameState.ownership,
-                        victoriousPlayer = currentGameState.victoriousPlayer
+                        victoriousPlayer = currentGameState.victoriousPlayer,
+                        stalemate = currentGameState.stalemate,
+                        turn = if (currentGameState.currentPlayer == 0) { currentGameState.turn + 1 } else { currentGameState.turn }
                     )
                     boardSquareToBoardSquares(newGameState)
                 }
@@ -73,7 +79,7 @@ fun BoardSquare(modifier: Modifier, squareId: Int, gameState: GameState, boardSq
 }
 
 @Composable
-fun BoardSquares(gameState: GameState, boardSquaresToBoard: (gameState: GameState) -> Unit) {
+fun BoardSquares(sessionState: SessionState, gameState: GameState, boardSquaresToBoard: (gameState: GameState) -> Unit) {
 
     var currentGameState by remember { mutableStateOf(gameState) }
 
@@ -91,6 +97,7 @@ fun BoardSquares(gameState: GameState, boardSquaresToBoard: (gameState: GameStat
                             .aspectRatio(1f),
                         squareId = i + (3 * j),
                         gameState = gameState,
+                        sessionState = sessionState,
                         boardSquareToBoardSquares = {updatedGameState -> currentGameState = updatedGameState }
                     )
                 }
@@ -113,7 +120,7 @@ fun BoardBackground(modifier: Modifier) {
 }
 
 @Composable
-fun Board(modifier: Modifier, gameState: GameState, boardToOrientation: (newGameState: GameState) -> Unit) {
+fun Board(modifier: Modifier, sessionState: SessionState, gameState: GameState, boardToOrientation: (newGameState: GameState) -> Unit) {
 
     var currentGameState by remember { mutableStateOf(gameState) }
 
@@ -121,7 +128,7 @@ fun Board(modifier: Modifier, gameState: GameState, boardToOrientation: (newGame
         modifier = modifier,
     ) {
         BoardBackground(modifier)
-        BoardSquares(gameState = gameState) { updatedGameState -> currentGameState = updatedGameState }
+        BoardSquares(sessionState = sessionState, gameState = gameState) { updatedGameState -> currentGameState = updatedGameState }
         boardToOrientation(currentGameState)
     }
 }

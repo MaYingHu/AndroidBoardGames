@@ -42,14 +42,12 @@ fun SelectPlayers(currentPlayers: Array<String>, selectPlayersToApp: (newPlayers
         )
         OutlinedTextField(
             modifier = Modifier.padding(top = 20.dp),
-            //placeholder = { Text(text = player1) },
             label = { Text(text = "Player 1") },
             value = player1,
             onValueChange = { newText -> player1 = newText },
         )
         OutlinedTextField(
             modifier = Modifier.padding(top = 40.dp),
-            //placeholder = { Text(text = player2) },
             label = { Text(text = "Player 2") },
             value = player2,
             onValueChange = { newText -> player2 = newText },

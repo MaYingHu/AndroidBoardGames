@@ -5,15 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -30,16 +29,42 @@ fun Title(gameState: GameState) {
 }
 
 @Composable
-fun GameStatus(gameState: GameState) {
+fun GameStatus(currentSessionState: SessionState, currentGameState: GameState, newGame: () -> Unit) {
 
-    var currentPlayerName by remember{ mutableStateOf(gameState.playerNames[gameState.currentPlayer]) }
-    currentPlayerName = gameState.playerNames[gameState.currentPlayer]
+    val currentPlayerName = currentSessionState.playerNames[currentGameState.currentPlayer]
+    val currentTurn = currentGameState.turn
 
-    if (gameState.victoriousPlayer < 0) {
+    if (currentGameState.stalemate) {
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(top = 10.dp),
+            textAlign = TextAlign.Center,
+            text = "It's a draw!",
+            style = MaterialTheme.typography.headlineLarge
+        )
+        ClickableText(
+            modifier = Modifier
+                .fillMaxWidth(),
+            style = MaterialTheme.typography.bodyLarge + TextStyle(
+                textAlign = TextAlign.Center
+            ),
+            text = AnnotatedString("(Click to play again)"),
+            onClick = { newGame() }
+        )
+    }
+    else if (currentGameState.victoriousPlayer < 0) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            textAlign = TextAlign.Center,
+            text = "Turn $currentTurn:",
+            style = MaterialTheme.typography.bodyLarge,
+        )
+        Text(
+            modifier = Modifier
+                .fillMaxWidth(),
             textAlign = TextAlign.Center,
             text = "$currentPlayerName to play…",
             style = MaterialTheme.typography.headlineLarge,
@@ -48,25 +73,34 @@ fun GameStatus(gameState: GameState) {
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(top = 10.dp),
             textAlign = TextAlign.Center,
             text = "$currentPlayerName wins!",
             style = MaterialTheme.typography.headlineLarge
+        )
+        ClickableText(
+            modifier = Modifier
+                .fillMaxWidth(),
+            style = MaterialTheme.typography.bodyLarge + TextStyle(
+                textAlign = TextAlign.Center
+            ),
+            text = AnnotatedString("(Click to play again)"),
+            onClick = { newGame() }
         )
     }
 }
 
 @Composable
-fun ScorePortrait(gameState: GameState) {
+fun ScorePortrait(currentSessionState: SessionState) {
 
-    val numPlayers = gameState.numPlayers
-    val players = gameState.playerNames
-    val scores = gameState.scores
+    val numPlayers = currentSessionState.numPlayers
+    val players = currentSessionState.playerNames
+    val scores = currentSessionState.scores
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(20.dp),
+            .padding(10.dp),
         horizontalArrangement = Arrangement.Center
     ) {
         for (i in 0 until numPlayers) {
@@ -88,11 +122,11 @@ fun ScorePortrait(gameState: GameState) {
 }
 
 @Composable
-fun ScoreLandscape(gameState: GameState) {
+fun ScoreLandscape(currentSessionState: SessionState) {
 
-    val numPlayers = gameState.numPlayers
-    val playerNames = gameState.playerNames
-    val scores = gameState.scores
+    val numPlayers = currentSessionState.numPlayers
+    val playerNames = currentSessionState.playerNames
+    val scores = currentSessionState.scores
 
     Column(
         verticalArrangement = Arrangement.Center,

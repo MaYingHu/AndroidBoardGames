@@ -22,8 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.boardgames.ui.theme.BoardGamesTheme
 
 @ExperimentalMaterial3Api
@@ -47,39 +45,46 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Portrait(gameState: GameState, portraitToApp: (updatedGameState: GameState) -> Unit) {
+fun Portrait(sessionState: SessionState, gameState: GameState, portraitToApp: (updatedGameState: GameState) -> Unit, resetGame: () -> Unit) {
 
     var currentGameState by remember { mutableStateOf(gameState) }
+    //val newGame by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+
         Title(gameState = currentGameState)
-        GameStatus(currentGameState)
-        Board(modifier = Modifier.fillMaxWidth(), gameState = currentGameState) { updatedGameState -> currentGameState = updatedGameState}
-        portraitToApp(currentGameState)
-        ScorePortrait(currentGameState)
+        GameStatus(currentSessionState = sessionState, currentGameState = currentGameState) { resetGame() }
+        Board(modifier = Modifier.fillMaxWidth(), sessionState = sessionState, gameState = currentGameState) { updatedGameState -> currentGameState = updatedGameState}
+        ScorePortrait(currentSessionState = sessionState)
     }
+
+    //if (newGame) {
+    //    currentGameState = GameState(ownership = arrayOf(-1, -1, -1, -1, -1, -1, -1, -1, -1), victoriousPlayer = -1)
+    //}
+
+    portraitToApp( currentGameState ) //if (newGame) { GameState(victoriousPlayer = -1, ownership = arrayOf(-1, -1, -1, -1, -1, -1, -1, -1, -1)) } else { currentGameState })
 }
 
 @Composable
-fun Landscape(currentGameState: GameState, updateGameState: (newGameState: GameState) -> Unit) {
+fun Landscape(currentSessionState: SessionState, currentGameState: GameState, updateGameState: (newGameState: GameState) -> Unit) {
     Row(
         modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
         NavigationLandscape()
-        Board(modifier = Modifier.fillMaxHeight(), gameState = currentGameState) { newGameState -> updateGameState(newGameState) }
+        Board(modifier = Modifier.fillMaxHeight(), sessionState = currentSessionState, gameState = currentGameState) { newGameState -> updateGameState(newGameState) }
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Title(currentGameState)
-            ScoreLandscape(currentGameState)
+            ScoreLandscape(currentSessionState = currentSessionState)
         }
     }
 }
@@ -88,8 +93,10 @@ fun Landscape(currentGameState: GameState, updateGameState: (newGameState: GameS
 @Composable
 fun App() {
 
-    var currentGameState by remember { mutableStateOf(GameState(playerNames = arrayOf("Zinaïda", "Zephyrus"))) }
+    var currentSessionState by remember { mutableStateOf( SessionState(playerNames = arrayOf("Zinaïda", "Zephyrus")) )}
+    var currentGameState by remember { mutableStateOf( GameState() ) }
     var currentScreen by remember { mutableStateOf("Players") }
+    var startNewGame by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -100,44 +107,37 @@ fun App() {
         content = { padding ->
             if (currentScreen == "Players") {
                 Box(Modifier.padding(padding)) {
-                    SelectPlayers(currentGameState.playerNames) { newPlayers ->
-                        currentGameState = GameState(
-                            gameName = currentGameState.gameName,
+                    SelectPlayers(currentSessionState.playerNames) { newPlayers ->
+                        currentSessionState = SessionState(
                             numPlayers = currentGameState.numPlayers,
                             playerNames = newPlayers,
-                            scores = currentGameState.scores,
-                            currentPlayer = currentGameState.currentPlayer,
-                            victoriousPlayer = currentGameState.victoriousPlayer
+                            scores = currentSessionState.scores,
                         )
+                        currentGameState = GameState()
                         currentScreen = "Current"
 
                     }
                 }
             } else {
                 Box(Modifier.padding(padding)) {
-                    Portrait(currentGameState) { updatedGameState ->
-                        currentGameState = updatedGameState
+                    if (startNewGame) {
+                        startNewGame = false
+                        Portrait(
+                            sessionState = currentSessionState,
+                            gameState = GameState(),
+                            portraitToApp = { updatedGameState -> currentGameState = updatedGameState },
+                            resetGame = { }
+                        )
+                    } else {
+                        Portrait(
+                            sessionState = currentSessionState,
+                            gameState = currentGameState,
+                            portraitToApp = { updatedGameState -> currentGameState = updatedGameState },
+                            resetGame = { startNewGame = true }
+                            )
                     }
                 }
             }
         }
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PortraitPreview() {
-    val gameState = GameState()
-    BoardGamesTheme {
-        Portrait(gameState) {}
-    }
-}
-
-@Preview(showBackground = true, device = Devices.AUTOMOTIVE_1024p, widthDp = 720, heightDp = 360)
-@Composable
-fun LandscapePreview() {
-    val gameState = GameState()
-    BoardGamesTheme {
-        Landscape(gameState) {}
-    }
 }

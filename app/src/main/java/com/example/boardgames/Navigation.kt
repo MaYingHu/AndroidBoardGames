@@ -25,24 +25,25 @@ fun NavigationPortrait(currentScreen: String, newScreen: (screen: String) -> Uni
 
     NavigationBar {
         navigationIcons.forEach { screen ->
-            if (currentScreen != screen.key)
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = screen.value,
-                        contentDescription = null
-                    )
-                },
-                label = {
-                    Text(
-                        text = screen.key
-                    )
-                },
-                selected = true,
-                onClick = {
-                    newScreen(screen.key)
-                }
-            )
+            if (currentScreen != screen.key) {
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            imageVector = screen.value,
+                            contentDescription = null
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = screen.key
+                        )
+                    },
+                    selected = true,
+                    onClick = {
+                        newScreen(screen.key)
+                    }
+                )
+            }
         }
     }
 }
