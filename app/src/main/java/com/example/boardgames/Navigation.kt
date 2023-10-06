@@ -49,31 +49,36 @@ fun NavigationPortrait(currentScreen: String, newScreen: (screen: String) -> Uni
 }
 
 @Composable
-fun NavigationLandscape() {
+fun NavigationLandscape(currentScreen: String, newScreen: (screen: String) -> Unit) {
 
     val navigationIcons = mapOf(
-        Icons.Filled.AccountCircle to "Players",
-        Icons.Filled.List to "Games",
-        Icons.Filled.Settings to "Settings"
+        "Players" to Icons.Filled.AccountCircle,
+        "Games" to Icons.Filled.List,
+        "Settings" to Icons.Filled.Settings,
+        "Current" to Icons.Filled.PlayArrow
     )
 
     NavigationRail {
-        navigationIcons.forEach {
-            NavigationRailItem(
-                icon = {
-                    Icon(
-                        imageVector = it.key,
-                        contentDescription = null
-                    )
-                },
-                label = {
-                    Text(
-                        text = it.value
-                    )
-                },
-                selected = true,
-                onClick = {}
-            )
+        navigationIcons.forEach { screen ->
+            if (currentScreen != screen.key) {
+                NavigationRailItem(
+                    icon = {
+                        Icon(
+                            imageVector = screen.value,
+                            contentDescription = null
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = screen.key
+                        )
+                    },
+                    selected = true,
+                    onClick = {
+                        newScreen(screen.key)
+                    }
+                )
+            }
         }
     }
 }
