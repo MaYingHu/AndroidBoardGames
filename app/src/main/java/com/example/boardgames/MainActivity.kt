@@ -48,7 +48,6 @@ class MainActivity : ComponentActivity() {
 fun Portrait(sessionState: SessionState, gameState: GameState, portraitToApp: (updatedGameState: GameState) -> Unit, resetGame: () -> Unit) {
 
     var currentGameState by remember { mutableStateOf(gameState) }
-    //val newGame by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -62,11 +61,7 @@ fun Portrait(sessionState: SessionState, gameState: GameState, portraitToApp: (u
         ScorePortrait(currentSessionState = sessionState)
     }
 
-    //if (newGame) {
-    //    currentGameState = GameState(ownership = arrayOf(-1, -1, -1, -1, -1, -1, -1, -1, -1), victoriousPlayer = -1)
-    //}
-
-    portraitToApp( currentGameState ) //if (newGame) { GameState(victoriousPlayer = -1, ownership = arrayOf(-1, -1, -1, -1, -1, -1, -1, -1, -1)) } else { currentGameState })
+    portraitToApp( currentGameState )
 }
 
 @Composable
@@ -76,7 +71,6 @@ fun Landscape(currentSessionState: SessionState, currentGameState: GameState, up
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        NavigationLandscape()
         Board(modifier = Modifier.fillMaxHeight(), sessionState = currentSessionState, gameState = currentGameState) { newGameState -> updateGameState(newGameState) }
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -108,25 +102,25 @@ fun App() {
             if (currentScreen == "Players") {
                 Box(Modifier.padding(padding)) {
                     SelectPlayers(currentSessionState.playerNames) { newPlayers ->
-                        currentSessionState = SessionState(
-                            numPlayers = currentGameState.numPlayers,
-                            playerNames = newPlayers,
-                            scores = currentSessionState.scores,
-                        )
-                        currentGameState = GameState()
+                        if (!newPlayers.contentEquals(currentSessionState.playerNames)) {
+                            currentSessionState = SessionState(
+                                playerNames = newPlayers,
+                            )
+                            currentGameState = GameState()
+                        }
                         currentScreen = "Current"
-
                     }
                 }
             } else {
                 Box(Modifier.padding(padding)) {
                     if (startNewGame) {
                         startNewGame = false
+                        currentGameState = GameState()
                         Portrait(
                             sessionState = currentSessionState,
-                            gameState = GameState(),
+                            gameState = currentGameState, //GameState(),
                             portraitToApp = { updatedGameState -> currentGameState = updatedGameState },
-                            resetGame = { }
+                            resetGame = { startNewGame = true }
                         )
                     } else {
                         Portrait(
